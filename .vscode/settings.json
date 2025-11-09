@@ -1,0 +1,11 @@
+{
+  "java.project.sourcePaths": ["src/main/java"],
+  "java.project.outputPath": "target/classes",
+  "java.configuration.detectJdkRuntime": true,
+  "java.configuration.runtimes": [],
+  "java.compile.nullAnalysis.mode": "automatic",
+  "java.eclipse.downloadSources": true,
+  "java.maven.downloadSources": true,
+  "java.project.referencedLibraries": [],
+  "java.configuration.updateBuildConfiguration": "interactive"
+}
