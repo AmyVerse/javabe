@@ -7,7 +7,19 @@ import io.javalin.Javalin;
 
 public class UserApi {
     public static void main(String[] args) {
-        // 1. Initialize Javalin and start on port 8080
+        // 1. Determine port (use PORT env var when deployed to Railway) and initialize
+        // Javalin
+        int port = 8080;
+        String portEnv = System.getenv("PORT");
+        if (portEnv != null && !portEnv.isEmpty()) {
+            try {
+                port = Integer.parseInt(portEnv);
+            } catch (NumberFormatException e) {
+                System.err.println("Invalid PORT environment variable, falling back to 8080: " + portEnv);
+            }
+        }
+
+        // Initialize Javalin
         Javalin app = Javalin.create(config -> {
             // Configuration for CORS (Allows all origins, methods, and headers)
             config.requestLogger.http((ctx, ms) -> {
@@ -19,9 +31,9 @@ public class UserApi {
                     corsConfig.anyHost(); // Allows requests from *any* origin
                 });
             });
-        }).start(8080);
+        }).start(port);
 
-        System.out.println("Javalin API running at http://localhost:8080");
+        System.out.println("Javalin API running at http://0.0.0.0:" + port);
 
         // 2. GET /api/ping
         app.get("/api/ping", ctx -> {
