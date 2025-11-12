@@ -45,7 +45,7 @@ public class WiPayApi {
                 String host = uri.getHost();
                 int port = uri.getPort() != -1 ? uri.getPort() : 6379;
                 String password = uri.getUserInfo() != null ? uri.getUserInfo().split(":")[1] : null;
-                
+
                 Jedis jedis = new Jedis(host, port);
                 if (password != null && !password.isEmpty()) {
                     jedis.auth(password);
@@ -62,7 +62,7 @@ public class WiPayApi {
     private static Javalin createJavalinApp(int port) {
         return Javalin.create(config -> {
             config.bundledPlugins.enableCors(cors -> cors.addRule(corsConfig -> corsConfig.anyHost()));
-        }).start("localhost", port);
+        }).start("0.0.0.0", port);
     }
 
     private static void setupRoutes(Javalin app) {
