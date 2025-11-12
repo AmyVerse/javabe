@@ -78,7 +78,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.1.0</version>
                 <configuration>
-                    <mainClass>app.UserApi</mainClass>
+                    <mainClass>app.WiPayApi</mainClass>
                 </configuration>
             </plugin>
 
@@ -97,7 +97,7 @@
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>app.UserApi</mainClass>
+                                    <mainClass>app.WiPayApi</mainClass>
                                 </transformer>
                             </transformers>
                             <!-- produce predictable jar name -->
@@ -113,7 +113,7 @@
                 <version>3.3.0</version> <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>app.UserApi</mainClass> 
+                            <mainClass>app.WiPayApi</mainClass> 
                         </manifest>
                     </archive>
                 </configuration>
