@@ -317,18 +317,16 @@ public class WiPayApi {
                 // Create notifications
                 String fromUserId = (String) fromAccount.get("userId");
                 String toUserId = (String) toAccount.get("userId");
-                String fromAccNumber = (String) fromAccount.get("accountNumber");
-                String toAccNumber = (String) toAccount.get("accountNumber");
 
-                String notificationSender = String.format("Transfer: Sent ₹%.2f from %s to account %s",
-                        amount, fromAccNumber, toAccNumber);
-                String notificationReceiver = String.format("Transfer: Received ₹%.2f to %s from account %s",
-                        amount, toAccNumber, fromAccNumber);
+                String notificationSender = String.format("sent ₹%.2f to %s", amount, toUserId);
+                String notificationReceiver = String.format("Received ₹%.2f from %s", amount, fromUserId);
 
                 jedis.lpush(NOTIFICATIONS_KEY + ":" + fromUserId,
-                        gson.toJson(Map.of("message", notificationSender, "timestamp", LocalDateTime.now().toString())));
+                        gson.toJson(
+                                Map.of("message", notificationSender, "timestamp", LocalDateTime.now().toString())));
                 jedis.lpush(NOTIFICATIONS_KEY + ":" + toUserId,
-                        gson.toJson(Map.of("message", notificationReceiver, "timestamp", LocalDateTime.now().toString())));
+                        gson.toJson(
+                                Map.of("message", notificationReceiver, "timestamp", LocalDateTime.now().toString())));
 
                 ctx.status(201).json(transaction);
             }
