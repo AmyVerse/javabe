@@ -318,8 +318,8 @@ public class WiPayApi {
                 String fromUserId = (String) fromAccount.get("userId");
                 String toUserId = (String) toAccount.get("userId");
 
-                String notificationSender = String.format("sent ₹%.2f to %s", amount, toUserId);
-                String notificationReceiver = String.format("Received ₹%.2f from %s", amount, fromUserId);
+                String notificationSender = String.format("Sent: ₹%.2f to %s", amount, toUserId);
+                String notificationReceiver = String.format("Received: ₹%.2f from %s", amount, fromUserId);
 
                 jedis.lpush(NOTIFICATIONS_KEY + ":" + fromUserId,
                         gson.toJson(
