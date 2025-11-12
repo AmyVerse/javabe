@@ -257,6 +257,83 @@ public class WiPayApi {
             }
         });
 
+        // ===== ACCOUNT-SPECIFIC TRANSFER ENDPOINT =====
+        app.post("/api/transfer-account", ctx -> {
+            Map<String, Object> body = gson.fromJson(ctx.body(), Map.class);
+            String fromAccountId = (String) body.get("fromAccountId");
+            String toAccountId = (String) body.get("toAccountId");
+            double amount = ((Number) body.get("amount")).doubleValue();
+
+            try (Jedis jedis = getRedisConnection()) {
+                // Get sender account
+                String fromAccJson = jedis.hget(ACCOUNTS_KEY, fromAccountId);
+                if (fromAccJson == null) {
+                    ctx.status(404).json(Map.of("error", "Sender account not found"));
+                    return;
+                }
+
+                // Get receiver account
+                String toAccJson = jedis.hget(ACCOUNTS_KEY, toAccountId);
+                if (toAccJson == null) {
+                    ctx.status(404).json(Map.of("error", "Receiver account not found"));
+                    return;
+                }
+
+                @SuppressWarnings("unchecked")
+                Map<String, Object> fromAccount = gson.fromJson(fromAccJson, Map.class);
+                @SuppressWarnings("unchecked")
+                Map<String, Object> toAccount = gson.fromJson(toAccJson, Map.class);
+
+                double fromBalance = ((Number) fromAccount.get("balance")).doubleValue();
+                double toBalance = ((Number) toAccount.get("balance")).doubleValue();
+
+                // Check balance
+                if (fromBalance < amount) {
+                    ctx.status(400).json(Map.of("error", "Insufficient balance in sender account"));
+                    return;
+                }
+
+                // Create transaction
+                Map<String, Object> transaction = new HashMap<>();
+                String txnId = UUID.randomUUID().toString();
+                transaction.put("id", txnId);
+                transaction.put("fromAccountId", fromAccountId);
+                transaction.put("toAccountId", toAccountId);
+                transaction.put("fromUserId", fromAccount.get("userId"));
+                transaction.put("toUserId", toAccount.get("userId"));
+                transaction.put("amount", amount);
+                transaction.put("timestamp", LocalDateTime.now().toString());
+                transaction.put("status", "completed");
+
+                // Update account balances
+                fromAccount.put("balance", fromBalance - amount);
+                toAccount.put("balance", toBalance + amount);
+
+                // Save all changes
+                jedis.hset(ACCOUNTS_KEY, fromAccountId, gson.toJson(fromAccount));
+                jedis.hset(ACCOUNTS_KEY, toAccountId, gson.toJson(toAccount));
+                jedis.hset(TRANSACTIONS_KEY, txnId, gson.toJson(transaction));
+
+                // Create notifications
+                String fromUserId = (String) fromAccount.get("userId");
+                String toUserId = (String) toAccount.get("userId");
+                String fromAccNumber = (String) fromAccount.get("accountNumber");
+                String toAccNumber = (String) toAccount.get("accountNumber");
+
+                String notificationSender = String.format("Transfer: Sent ₹%.2f from %s to account %s",
+                        amount, fromAccNumber, toAccNumber);
+                String notificationReceiver = String.format("Transfer: Received ₹%.2f to %s from account %s",
+                        amount, toAccNumber, fromAccNumber);
+
+                jedis.lpush(NOTIFICATIONS_KEY + ":" + fromUserId,
+                        gson.toJson(Map.of("message", notificationSender, "timestamp", LocalDateTime.now().toString())));
+                jedis.lpush(NOTIFICATIONS_KEY + ":" + toUserId,
+                        gson.toJson(Map.of("message", notificationReceiver, "timestamp", LocalDateTime.now().toString())));
+
+                ctx.status(201).json(transaction);
+            }
+        });
+
         // ===== NOTIFICATIONS ENDPOINT =====
         app.get("/api/notifications/{userId}", ctx -> {
             String userId = ctx.pathParam("userId");
